@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Read(//usr/local/bin/**)",
+      "Bash(command -v nvm)",
+      "Bash(command -v brew)",
+      "Bash(brew --version)",
+      "Bash(brew install *)",
+      "Bash(npm --version)",
+      "Bash(npm run *)",
+      "Bash(supabase --version)",
+      "Bash(psql --version)",
+      "Bash(python3 run_daily.py scan)"
+    ]
+  }
+}

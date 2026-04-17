@@ -1,0 +1,19 @@
+# Environment
+.env
+.env.local
+
+# Dependencies
+node_modules/
+pipeline/__pycache__/
+pipeline/**/__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Build
+dist/
+
+# Misc
+.DS_Store
+*.log
