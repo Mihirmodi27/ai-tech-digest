@@ -1,6 +1,6 @@
 # AI & Tech Digest
 
-A daily AI & tech news portal. A background pipeline scans ~12 sources every morning, uses Claude to dedupe and synthesize them into ~25 ranked items across 10 categories, and emails the digest out. The web app (Linear-inspired dark UI) lets you browse today's items or view weekly summaries.
+A daily AI & tech news portal. A background pipeline scans ~10 sources every morning, uses Claude to dedupe and synthesize them into ~25 ranked items across 10 categories, and emails the digest out. The web app (Linear-inspired dark UI) lets you browse today's items or view weekly summaries.
 
 **Live:** [ai-tech-digest-sage.vercel.app](https://ai-tech-digest-sage.vercel.app)
 
@@ -11,7 +11,7 @@ A daily AI & tech news portal. A background pipeline scans ~12 sources every mor
 ```
 ┌─────────────┐     ┌──────────────┐     ┌─────────────┐     ┌──────────┐
 │  RSS + HN   │ ──▶ │ Claude (LLM) │ ──▶ │  Supabase   │ ◀── │  Web UI  │
-│  (12 srcs)  │     │ dedup + rank │     │  (Postgres) │     │ (Vercel) │
+│  (10 srcs)  │     │ dedup + rank │     │  (Postgres) │     │ (Vercel) │
 └─────────────┘     └──────────────┘     └─────────────┘     └──────────┘
        │                    │                                       
        └──── Python pipeline (GitHub Actions, daily 08:00 IST) ─────
@@ -61,7 +61,10 @@ cp .env.example .env          # then fill in your keys
 In the Supabase dashboard → SQL Editor, run these files in order:
 
 1. `supabase/migrations/001_initial_schema.sql` — creates tables
-2. `supabase/seed.sql` — seeds 10 categories + 12 sources
+2. `supabase/seed.sql` — seeds 10 categories + 10 sources
+3. `supabase/migrations/002_published_at_and_source_cleanup.sql` — adds `published_at` column and fixes the source list
+
+> Run any future `supabase/migrations/NNN_*.sql` files in filename order as you pull new commits.
 
 ### 3. Start the frontend + API
 
@@ -93,7 +96,7 @@ See `.env.example`. The pipeline needs:
 |-----|---------|
 | `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` | Database access |
 | `ANTHROPIC_API_KEY`, `CLAUDE_MODEL` | LLM synthesis |
-| `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_TO` | Daily email |
+| `RESEND_API_KEY`, `EMAIL_FROM` | Daily email (recipients come from the `subscribers` table) |
 
 The web app additionally needs `SUPABASE_ANON_KEY`. On Vercel, add these under **Project Settings → Environment Variables**. For the GitHub Actions pipeline, add them under **Repo Settings → Secrets → Actions**.
 
