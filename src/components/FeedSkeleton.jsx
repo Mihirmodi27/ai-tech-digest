@@ -1,23 +1,16 @@
 import React from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function FeedSkeleton() {
   return (
-    <div style={{ padding: '0 0 64px 0' }}>
-      {[1, 2, 3, 4, 5].map((i) => (
-        <div key={i} style={{ padding: '16px 24px', borderBottom: '1px solid var(--border)' }}>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-            <div className="skeleton" style={{ width: 90, height: 16 }} />
-            <div className="skeleton" style={{ width: 50, height: 16 }} />
-          </div>
-          <div className="skeleton" style={{ width: '80%', height: 20, marginBottom: 8 }} />
-          <div className="skeleton" style={{ width: '100%', height: 14, marginBottom: 4 }} />
-          <div className="skeleton" style={{ width: '90%', height: 14, marginBottom: 8 }} />
-          <div className="skeleton" style={{ width: '95%', height: 14, marginBottom: 8 }} />
-          <div style={{ display: 'flex', gap: 8 }}>
-            <div className="skeleton" style={{ width: 60, height: 18 }} />
-            <div className="skeleton" style={{ width: 70, height: 18 }} />
-            <div className="skeleton" style={{ width: 50, height: 18 }} />
-          </div>
+    <div className="pt-4">
+      {Array.from({ length: 12 }).map((_, i) => (
+        <div key={i} className="flex items-center gap-3 px-6 py-3">
+          <Skeleton className="h-3.5 w-3.5 rounded-sm" />
+          <Skeleton className="h-4 w-20 rounded" />
+          <Skeleton className="h-4 flex-1 max-w-md rounded" />
+          <Skeleton className="ml-auto h-3 w-16 rounded" />
+          <Skeleton className="h-3 w-10 rounded" />
         </div>
       ))}
     </div>

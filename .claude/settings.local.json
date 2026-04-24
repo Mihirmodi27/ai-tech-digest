@@ -11,7 +11,8 @@
       "Bash(npm run *)",
       "Bash(supabase --version)",
       "Bash(psql --version)",
-      "Bash(python3 run_daily.py scan)"
+      "Bash(python3 run_daily.py scan)",
+      "Bash(npx shadcn@latest add button input tabs card badge scroll-area tooltip dialog skeleton separator --yes)"
     ]
   }
 }

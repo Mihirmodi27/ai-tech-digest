@@ -1,18 +1,17 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
-import Header from './components/Header';
-import HotNews from './components/HotNews';
-import Sidebar from './components/Sidebar';
-import NewsCard from './components/NewsCard';
-import WeeklySummary from './components/WeeklySummary';
-import ShortcutsModal from './components/ShortcutsModal';
-import FeedSkeleton from './components/FeedSkeleton';
-import { useDigest, useWeeklySummary } from './hooks/useDigest';
-import { useTheme } from './hooks/useTheme';
-import { useKeyboard } from './hooks/useKeyboard';
-import { TWEAK_DEFAULTS } from './lib/constants';
+import Header from '@/components/Header';
+import HotNews from '@/components/HotNews';
+import Sidebar from '@/components/Sidebar';
+import NewsCard from '@/components/NewsCard';
+import WeeklySummary from '@/components/WeeklySummary';
+import ShortcutsModal from '@/components/ShortcutsModal';
+import FeedSkeleton from '@/components/FeedSkeleton';
+import { useDigest, useWeeklySummary } from '@/hooks/useDigest';
+import { useTheme } from '@/hooks/useTheme';
+import { useKeyboard } from '@/hooks/useKeyboard';
+import { TWEAK_DEFAULTS } from '@/lib/constants';
 
 export default function App() {
-  // --- State ---
   const [viewMode, setViewMode] = useState('today');
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -24,11 +23,9 @@ export default function App() {
   const [tweaks] = useState(TWEAK_DEFAULTS);
   const { theme, toggle: toggleTheme } = useTheme();
 
-  // --- Refs ---
   const searchInputRef = useRef(null);
   const cardRefs = useRef([]);
 
-  // --- Data fetching ---
   const { data: todayDigest, isLoading: todayLoading } = useDigest('latest');
   const weekKey = viewMode === 'thisWeek' ? 'current' : viewMode === 'lastWeek' ? 'previous' : null;
   const { data: weeklySummary, isLoading: weeklyLoading } = useWeeklySummary(weekKey);
@@ -40,17 +37,17 @@ export default function App() {
 
   const digest = viewMode === 'today' ? todayDigest : null;
 
-  // --- Derived state ---
   const filteredItems = useMemo(() => {
     let items = viewItems;
     if (activeCategory !== 'All') items = items.filter((i) => i.category === activeCategory);
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      items = items.filter((i) =>
-        i.headline.toLowerCase().includes(q) ||
-        i.what.toLowerCase().includes(q) ||
-        i.tags?.some((t) => t.toLowerCase().includes(q)) ||
-        i.source?.name.toLowerCase().includes(q)
+      items = items.filter(
+        (i) =>
+          i.headline.toLowerCase().includes(q) ||
+          i.what.toLowerCase().includes(q) ||
+          i.tags?.some((t) => t.toLowerCase().includes(q)) ||
+          i.source?.name.toLowerCase().includes(q)
       );
     }
     return items;
@@ -75,7 +72,6 @@ export default function App() {
 
   const topFive = useMemo(() => viewItems.slice(0, 5), [viewItems]);
 
-  // --- Effects ---
   useEffect(() => {
     localStorage.setItem('digest-tldr', tldrCollapsed ? 'collapsed' : 'expanded');
   }, [tldrCollapsed]);
@@ -86,16 +82,22 @@ export default function App() {
     }
   }, [activeCardIndex]);
 
-  useEffect(() => { setActiveCardIndex(-1); }, [activeCategory, searchQuery, viewMode]);
+  useEffect(() => {
+    setActiveCardIndex(-1);
+  }, [activeCategory, searchQuery, viewMode]);
 
-  // --- Keyboard ---
-  useKeyboard({
-    'j': () => setActiveCardIndex((i) => Math.min(i + 1, filteredItems.length - 1)),
-    'o': () => { if (activeCardIndex >= 0) window.open(filteredItems[activeCardIndex]?.url, '_blank'); },
-    '/': () => searchInputRef.current?.focus(),
-    'k': () => setShowShortcuts((s) => !s),
-    'Escape': () => setShowShortcuts(false),
-  }, [filteredItems, activeCardIndex]);
+  useKeyboard(
+    {
+      j: () => setActiveCardIndex((i) => Math.min(i + 1, filteredItems.length - 1)),
+      o: () => {
+        if (activeCardIndex >= 0) window.open(filteredItems[activeCardIndex]?.url, '_blank');
+      },
+      '/': () => searchInputRef.current?.focus(),
+      k: () => setShowShortcuts((s) => !s),
+      Escape: () => setShowShortcuts(false),
+    },
+    [filteredItems, activeCardIndex]
+  );
 
   const scrollToItem = (id) => {
     setActiveCategory('All');
@@ -103,47 +105,49 @@ export default function App() {
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const fs = tweaks.fontScale;
   const isWeeklyView = viewMode === 'thisWeek' || viewMode === 'lastWeek';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-      <Header
-        viewMode={viewMode} setViewMode={setViewMode}
-        searchQuery={searchQuery} setSearchQuery={setSearchQuery}
-        searchInputRef={searchInputRef} theme={theme} toggleTheme={toggleTheme}
-        onShowShortcuts={() => setShowShortcuts(true)} fs={fs}
+    <div className="flex h-screen overflow-hidden bg-background text-foreground">
+      {/* Left sidebar */}
+      <Sidebar
+        viewMode={viewMode}
+        setViewMode={setViewMode}
+        activeCategory={activeCategory}
+        setActiveCategory={setActiveCategory}
+        categoryCounts={categoryCounts}
       />
 
-      {/* Hot News (today view only) */}
-      {viewMode === 'today' && (
-        <HotNews
-          items={topFive} collapsed={tldrCollapsed}
-          setCollapsed={setTldrCollapsed} onScrollToItem={scrollToItem} fs={fs}
+      {/* Main column */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        <Header
+          viewMode={viewMode}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          searchInputRef={searchInputRef}
+          theme={theme}
+          toggleTheme={toggleTheme}
+          onShowShortcuts={() => setShowShortcuts(true)}
+          itemCount={viewMode === 'today' ? filteredItems.length : undefined}
+          activeCategory={activeCategory}
         />
-      )}
 
-      {/* Main area */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        {/* Sidebar (today view only) */}
-        {viewMode === 'today' && (
-          <Sidebar
-            activeCategory={activeCategory} setActiveCategory={setActiveCategory}
-            categoryCounts={categoryCounts} fs={fs}
+        {viewMode === 'today' && !todayLoading && topFive.length > 0 && (
+          <HotNews
+            items={topFive}
+            collapsed={tldrCollapsed}
+            setCollapsed={setTldrCollapsed}
+            onScrollToItem={scrollToItem}
           />
         )}
 
-        {/* Feed */}
-        <main style={{ flex: 1, overflowY: 'auto', padding: '0 0 64px 0' }}>
+        <main className="flex-1 overflow-y-auto">
           {isWeeklyView ? (
-            <WeeklySummary summary={weeklySummary} isLoading={weeklyLoading} fs={fs} />
+            <WeeklySummary summary={weeklySummary} isLoading={weeklyLoading} />
           ) : todayLoading ? (
             <FeedSkeleton />
           ) : filteredItems.length === 0 ? (
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              height: '40vh', color: 'var(--text-muted)', fontSize: 14 * fs,
-            }}>
+            <div className="flex h-[40vh] items-center justify-center text-[13px] text-muted-foreground">
               {searchQuery
                 ? `No items match '${searchQuery}'. Try broader terms.`
                 : 'No items in this category.'}
@@ -151,31 +155,36 @@ export default function App() {
           ) : (
             <>
               {Object.entries(groupedItems).map(([category, items]) => (
-                <div key={category}>
-                  <div style={{
-                    padding: '16px 24px 8px', borderBottom: '1px solid var(--border)',
-                    display: 'flex', alignItems: 'baseline', gap: 8,
-                  }}>
-                    <span style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)' }}>{category}</span>
-                    <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>&middot; {items.length}</span>
+                <section key={category} className="mb-8">
+                  <div className="flex items-center gap-2.5 px-6 pb-2 pt-6">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      {category}
+                    </span>
+                    <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] tabular-nums text-muted-foreground">
+                      {items.length}
+                    </span>
                   </div>
-                  {items.map((item) => {
-                    const globalIdx = filteredItems.indexOf(item);
-                    return (
-                      <NewsCard
-                        key={item.id} item={item} isActive={globalIdx === activeCardIndex}
-                        ref={(el) => (cardRefs.current[globalIdx] = el)}
-                        fs={fs} showTags={tweaks.showTags} compact={tweaks.compactCards}
-                      />
-                    );
-                  })}
-                </div>
+                  <div>
+                    {items.map((item) => {
+                      const globalIdx = filteredItems.indexOf(item);
+                      return (
+                        <NewsCard
+                          key={item.id}
+                          item={item}
+                          isActive={globalIdx === activeCardIndex}
+                          ref={(el) => (cardRefs.current[globalIdx] = el)}
+                          showTags={tweaks.showTags}
+                        />
+                      );
+                    })}
+                  </div>
+                </section>
               ))}
-              {/* Meta footer */}
               {digest?.meta && (
-                <div style={{ padding: '32px 24px 16px', color: 'var(--text-muted)', fontSize: 11 }}>
-                  Sources scanned: {digest.meta.sourcesScanned} &middot; Items evaluated: {digest.meta.itemsEvaluated} &middot; Items included: {digest.meta.itemsIncluded}<br />
-                  Digest generated at {digest.meta.generatedAt} &middot; Last updated {digest.meta.updatedAt}
+                <div className="px-6 py-8 text-[11px] text-muted-foreground">
+                  Sources scanned: {digest.meta.sourcesScanned} · Items evaluated: {digest.meta.itemsEvaluated} · Items included: {digest.meta.itemsIncluded}
+                  <br />
+                  Generated at {digest.meta.generatedAt} · Updated {digest.meta.updatedAt}
                 </div>
               )}
             </>
@@ -183,7 +192,7 @@ export default function App() {
         </main>
       </div>
 
-      {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
+      <ShortcutsModal open={showShortcuts} onOpenChange={setShowShortcuts} />
     </div>
   );
 }

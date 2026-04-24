@@ -17,3 +17,6 @@ dist/
 # Misc
 .DS_Store
 *.log
+
+# Claude Code skills (local AI tooling, not project code)
+.claude/skills/

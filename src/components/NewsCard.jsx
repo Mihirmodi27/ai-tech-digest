@@ -1,89 +1,127 @@
 import React, { useState, forwardRef } from 'react';
+import { ChevronRight, ExternalLink, AlertCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-const NewsCard = forwardRef(({ item, isActive, fs, showTags, compact }, ref) => {
+const NewsCard = forwardRef(({ item, isActive, showTags }, ref) => {
   const [expanded, setExpanded] = useState(false);
   const isRumor = item.category === 'Rumors & Unconfirmed';
 
   return (
-    <div ref={ref} id={`card-${item.id}`} className="news-card" style={{
-      padding: compact ? '12px 24px' : '16px 24px',
-      borderBottom: '1px solid var(--border)',
-      borderLeft: isRumor
-        ? '2px dashed var(--rumor-border)'
-        : isActive ? '2px solid var(--accent)' : '2px solid transparent',
-      background: isActive ? 'var(--accent-dim)' : 'transparent',
-      transition: 'background 0.12s',
-    }}>
-      {/* Meta row */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-        <span style={{
-          fontSize: 10.5, fontWeight: 500, padding: '1px 6px', borderRadius: 3,
-          background: 'var(--tag-bg)', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.03em',
-        }}>{item.category}</span>
-        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{item.time}</span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--text-muted)', marginLeft: 'auto' }}>
-          <span style={{
-            width: 14, height: 14, borderRadius: 2, background: 'var(--tag-bg)',
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 9, fontWeight: 700,
-          }}>{item.source?.favicon}</span>
-          {item.source?.name}
-        </span>
-      </div>
-
-      {/* Headline */}
-      <a href={item.url} target="_blank" rel="noopener noreferrer" style={{
-        display: 'block', fontSize: (compact ? 15 : 16.5) * fs, fontWeight: 600,
-        lineHeight: 1.35, color: 'var(--text-primary)', marginBottom: compact ? 4 : 6,
-      }}>{item.headline}</a>
-
-      {/* What */}
-      {!compact && (
-        <p style={{ fontSize: 13 * fs, color: 'var(--text-secondary)', lineHeight: 1.55, marginBottom: 4 }}>
-          {item.what}
-        </p>
+    <div
+      ref={ref}
+      id={`card-${item.id}`}
+      className={cn(
+        'group relative transition-colors',
+        isActive ? 'bg-secondary/50' : 'hover:bg-secondary/30'
       )}
-
-      {/* Why */}
-      <p style={{ fontSize: 13 * fs, color: 'var(--text-primary)', lineHeight: 1.55, marginBottom: compact ? 4 : 8, opacity: 0.85 }}>
-        <span style={{ color: 'var(--accent)', marginRight: 4 }}>&rarr;</span>{item.why}
-      </p>
-
-      {/* Bottom row */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-        {showTags && item.tags?.map((t) => (
-          <span key={t} style={{
-            fontSize: 11, color: 'var(--tag-text)', background: 'var(--tag-bg)',
-            padding: '1px 6px', borderRadius: 3,
-          }}>{t}</span>
-        ))}
-        <span style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
-          <a href={item.source?.url || item.url} target="_blank" rel="noopener noreferrer"
-            style={{ fontSize: 11, color: 'var(--accent)' }}>
-            &#x1F517; {item.source?.name}
-          </a>
-          {item.extraSources?.length > 0 && (
-            <button onClick={() => setExpanded(!expanded)} style={{ fontSize: 11, color: 'var(--accent)' }}>
-              + {item.extraSources.length} more
-            </button>
+    >
+      {/* Row — Linear-style single line */}
+      <button
+        type="button"
+        onClick={() => setExpanded((e) => !e)}
+        className="flex w-full items-center gap-3 px-6 py-3 text-left"
+      >
+        <ChevronRight
+          className={cn(
+            'h-3.5 w-3.5 shrink-0 text-muted-foreground/50 transition-transform',
+            expanded && 'rotate-90'
           )}
-        </span>
-      </div>
+          strokeWidth={2}
+        />
 
-      {/* Extra sources */}
-      {expanded && item.extraSources?.length > 0 && (
-        <div style={{ marginTop: 6, display: 'flex', gap: 12 }}>
-          {item.extraSources.map((s, i) => (
-            <a key={i} href={s.url || '#'} target="_blank" rel="noopener noreferrer"
-              style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span style={{
-                width: 14, height: 14, borderRadius: 2, background: 'var(--tag-bg)',
-                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 9, fontWeight: 700,
-              }}>{s.favicon}</span>
-              {s.name}
-            </a>
-          ))}
+        {/* Category pill — monochrome */}
+        <span
+          className={cn(
+            'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider',
+            isRumor
+              ? 'bg-[hsl(var(--rumor)/0.15)] text-[hsl(var(--rumor))]'
+              : 'bg-secondary text-muted-foreground'
+          )}
+        >
+          {isRumor && <AlertCircle className="mr-0.5 inline h-2.5 w-2.5" />}
+          {item.category}
+        </span>
+
+        {/* Headline */}
+        <span className="flex-1 truncate text-[13.5px] font-medium">{item.headline}</span>
+
+        {/* Right-edge metadata */}
+        <div className="flex shrink-0 items-center gap-4 text-[11.5px] text-muted-foreground">
+          <span className="flex items-center gap-1.5">
+            <span className="inline-flex h-4 w-4 items-center justify-center rounded-sm bg-secondary text-[9px] font-bold">
+              {item.source?.favicon}
+            </span>
+            <span className="hidden lg:inline">{item.source?.name}</span>
+          </span>
+          <span className="tabular-nums">{item.time}</span>
+          <a
+            href={item.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground"
+            aria-label="Open source"
+          >
+            <ExternalLink className="h-3.5 w-3.5" strokeWidth={1.75} />
+          </a>
+        </div>
+      </button>
+
+      {/* Expanded detail */}
+      {expanded && (
+        <div className="space-y-2.5 px-6 pb-4 pl-[52px]">
+          <p className="text-[13px] leading-relaxed text-muted-foreground">{item.what}</p>
+          <p className="text-[13px] leading-relaxed">
+            <span className="mr-1 text-primary">→</span>
+            {item.why}
+          </p>
+
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            {showTags &&
+              item.tags?.map((t) => (
+                <span
+                  key={t}
+                  className="rounded bg-secondary px-1.5 py-0.5 text-[11px] text-muted-foreground"
+                >
+                  {t}
+                </span>
+              ))}
+            <span className="ml-auto flex items-center gap-3 text-[11px]">
+              <a
+                href={item.source?.url || item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-primary hover:underline"
+              >
+                <ExternalLink className="h-3 w-3" />
+                {item.source?.name}
+              </a>
+              {item.extraSources?.length > 0 && (
+                <span className="text-muted-foreground">
+                  + {item.extraSources.length} other sources
+                </span>
+              )}
+            </span>
+          </div>
+
+          {item.extraSources?.length > 0 && (
+            <div className="flex flex-wrap gap-3 pt-1">
+              {item.extraSources.map((s, i) => (
+                <a
+                  key={i}
+                  href={s.url || '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+                >
+                  <span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-sm bg-secondary text-[9px] font-bold">
+                    {s.favicon}
+                  </span>
+                  {s.name}
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

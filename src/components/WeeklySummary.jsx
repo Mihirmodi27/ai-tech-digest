@@ -1,83 +1,105 @@
 import React from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
-export default function WeeklySummary({ summary, isLoading, fs }) {
+export default function WeeklySummary({ summary, isLoading }) {
   if (isLoading) return <WeeklySkeleton />;
 
   if (!summary) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: 'var(--text-muted)', fontSize: 14 * fs }}>
+      <div className="flex h-[60vh] items-center justify-center text-sm text-muted-foreground">
         No summary available for this period.
       </div>
     );
   }
 
   return (
-    <div style={{ maxWidth: 760, margin: '0 auto', padding: '24px 24px 64px' }}>
-      {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--accent)', marginBottom: 4 }}>Weekly Summary</div>
-        <div style={{ fontSize: 20 * fs, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>{summary.period}</div>
-        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-          {summary.stats.totalItems} items &middot; {summary.stats.sourcesScanned} sources scanned &middot; Top source: {summary.stats.topSource}
+    <div className="mx-auto max-w-3xl px-6 pb-16 pt-8">
+      {/* Title block */}
+      <div className="mb-8">
+        <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-primary">
+          Weekly Summary
+        </div>
+        <h1 className="mb-2 text-2xl font-semibold tracking-tight">{summary.period}</h1>
+        <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
+          <span>{summary.stats.totalItems} items</span>
+          <span>·</span>
+          <span>{summary.stats.sourcesScanned} sources</span>
+          <span>·</span>
+          <span>Top: {summary.stats.topSource}</span>
         </div>
       </div>
 
       {/* Overview */}
-      <div style={{ fontSize: 14 * fs, lineHeight: 1.65, color: 'var(--text-secondary)', marginBottom: 32, borderLeft: '2px solid var(--accent)', paddingLeft: 16 }}>
+      <p className="mb-10 text-[14px] leading-relaxed text-foreground/85">
         {summary.overview}
-      </div>
+      </p>
 
       {/* Top Stories */}
-      <div style={{ marginBottom: 32 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: 12 }}>Top Stories</div>
-        {summary.topStories.map((s, i) => (
-          <div key={i} style={{ padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 2 }}>
-              <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--accent)', fontVariantNumeric: 'tabular-nums', minWidth: 18 }}>{i + 1}</span>
-              <span style={{ fontSize: 14.5 * fs, fontWeight: 600, color: 'var(--text-primary)' }}>{s.title}</span>
-            </div>
-            <div style={{ fontSize: 13 * fs, color: 'var(--text-secondary)', paddingLeft: 26 }}>{s.summary}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Emerging Themes */}
-      <div style={{ marginBottom: 32 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: 12 }}>Emerging Themes</div>
-        <div style={{ display: 'grid', gap: 12 }}>
-          {summary.emergingThemes.map((t, i) => (
-            <div key={i} style={{ padding: '12px 16px', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 6 }}>
-              <div style={{ fontSize: 13 * fs, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>{t.theme}</div>
-              <div style={{ fontSize: 12.5 * fs, color: 'var(--text-secondary)', lineHeight: 1.55 }}>{t.detail}</div>
+      <section className="mb-10">
+        <h2 className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Top Stories
+        </h2>
+        <div className="divide-y divide-sidebar-border/50">
+          {summary.topStories.map((s, i) => (
+            <div key={i} className="py-3">
+              <div className="mb-1 flex items-baseline gap-3">
+                <span className="w-5 shrink-0 text-[12px] font-semibold tabular-nums text-primary">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <span className="text-[14px] font-medium">{s.title}</span>
+              </div>
+              <p className="pl-8 text-[13px] leading-relaxed text-muted-foreground">{s.summary}</p>
             </div>
           ))}
         </div>
-      </div>
+      </section>
+
+      {/* Emerging Themes */}
+      <section className="mb-10">
+        <h2 className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Emerging Themes
+        </h2>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {summary.emergingThemes.map((t, i) => (
+            <div
+              key={i}
+              className="rounded-md border border-sidebar-border bg-card p-3.5 transition-colors hover:border-muted-foreground/30"
+            >
+              <div className="mb-1 text-[13px] font-semibold">{t.theme}</div>
+              <div className="text-[12.5px] leading-relaxed text-muted-foreground">{t.detail}</div>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* Category Breakdown */}
-      <div>
-        <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: 12 }}>Category Breakdown</div>
-        {summary.categoryBreakdown.map((c, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
-            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', minWidth: 160 }}>{c.category}</span>
-            <span style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600, fontVariantNumeric: 'tabular-nums', minWidth: 24 }}>{c.count}</span>
-            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{c.highlight}</span>
-          </div>
-        ))}
-      </div>
+      <section>
+        <h2 className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Category Breakdown
+        </h2>
+        <div className="divide-y divide-sidebar-border/50">
+          {summary.categoryBreakdown.map((c, i) => (
+            <div key={i} className="flex items-center gap-3 py-2.5 text-[12.5px]">
+              <span className="min-w-[180px] font-medium">{c.category}</span>
+              <span className="min-w-[32px] tabular-nums text-primary">{c.count}</span>
+              <span className="text-muted-foreground">{c.highlight}</span>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
 
 function WeeklySkeleton() {
   return (
-    <div style={{ maxWidth: 760, margin: '0 auto', padding: '24px 24px 64px' }}>
-      <div className="skeleton" style={{ width: 120, height: 14, marginBottom: 8 }} />
-      <div className="skeleton" style={{ width: 300, height: 24, marginBottom: 8 }} />
-      <div className="skeleton" style={{ width: 250, height: 12, marginBottom: 32 }} />
-      <div className="skeleton" style={{ width: '100%', height: 60, marginBottom: 32 }} />
-      {[1, 2, 3].map(i => (
-        <div key={i} className="skeleton" style={{ width: '100%', height: 50, marginBottom: 12 }} />
+    <div className="mx-auto max-w-3xl px-6 pb-16 pt-8">
+      <Skeleton className="mb-2 h-3 w-32" />
+      <Skeleton className="mb-3 h-7 w-72" />
+      <Skeleton className="mb-10 h-3 w-60" />
+      <Skeleton className="mb-10 h-16 w-full" />
+      {[1, 2, 3].map((i) => (
+        <Skeleton key={i} className="mb-3 h-12 w-full" />
       ))}
     </div>
   );

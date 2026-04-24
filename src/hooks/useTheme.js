@@ -6,7 +6,7 @@ export function useTheme() {
   );
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.classList.toggle('light', theme === 'light');
     localStorage.setItem('digest-theme', theme);
   }, [theme]);
 
