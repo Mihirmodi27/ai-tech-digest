@@ -13,16 +13,13 @@ def get_active_sources():
     return result.data
 
 
-def get_category_id(name: str) -> int:
-    """Look up category ID by name."""
-    result = supabase.table('categories').select('id').eq('name', name).single().execute()
-    return result.data['id']
-
-
-def get_source_id(name: str) -> int:
-    """Look up source ID by name."""
-    result = supabase.table('sources').select('id').eq('name', name).single().execute()
-    return result.data['id']
+def _name_id_map(table: str, names: list[str]) -> dict[str, int]:
+    """Fetch {name: id} for a set of rows in one query. Unknown names are absent."""
+    unique = list({n for n in names if n})
+    if not unique:
+        return {}
+    result = supabase.table(table).select('id, name').in_('name', unique).execute()
+    return {row['name']: row['id'] for row in (result.data or [])}
 
 
 def insert_raw_articles(articles: list[dict]):
@@ -68,23 +65,72 @@ def create_digest(digest_date: str, meta: dict) -> int:
 
 
 def insert_digest_items(digest_id: int, items: list[dict]):
-    """Insert processed digest items."""
+    """Insert digest items + their extra sources in one batch each.
+
+    Resolves category/source names to IDs with one SELECT per table (no N+1).
+    """
+    if not items:
+        return
+
+    # Collect every category + source name we'll need (primary + extras).
+    all_categories = [i.get('category', '') for i in items]
+    all_sources = []
+    for i in items:
+        if i.get('source'):
+            all_sources.append(i['source'])
+        all_sources.extend(i.get('extra_sources', []) or [])
+
+    cat_map = _name_id_map('categories', all_categories)
+    src_map = _name_id_map('sources', all_sources)
+
     rows = []
-    for i, item in enumerate(items):
+    for rank, item in enumerate(items, start=1):
+        category_id = cat_map.get(item.get('category'))
+        source_id = src_map.get(item.get('source'))
+        if category_id is None or source_id is None:
+            # Skip malformed items rather than inserting with bogus FKs.
+            print(f"  [warn] skipping item (unknown category/source): {item.get('headline')!r}")
+            continue
         rows.append({
             'digest_id': digest_id,
-            'category_id': get_category_id(item['category']),
-            'source_id': get_source_id(item['source']),
+            'category_id': category_id,
+            'source_id': source_id,
             'headline': item['headline'],
             'what': item['what'],
             'why': item['why'],
             'url': item.get('url', '#'),
             'time_label': item.get('time', ''),
+            'published_at': item.get('published_at'),
             'tags': item.get('tags', []),
-            'rank': i + 1,
-            'is_rumor': item['category'] == 'Rumors & Unconfirmed',
+            'rank': rank,
+            'is_rumor': item.get('category') == 'Rumors & Unconfirmed',
         })
-    supabase.table('digest_items').insert(rows).execute()
+
+    if not rows:
+        return
+    inserted = supabase.table('digest_items').insert(rows).execute().data or []
+
+    # Build extra-source rows aligned with the items we actually inserted.
+    extras_rows = []
+    # inserted is in the same order as `rows`, which matches the filtered items.
+    insert_index = 0
+    for item in items:
+        if cat_map.get(item.get('category')) is None or src_map.get(item.get('source')) is None:
+            continue
+        inserted_id = inserted[insert_index]['id']
+        insert_index += 1
+        for extra_name in item.get('extra_sources', []) or []:
+            extra_id = src_map.get(extra_name)
+            if extra_id is None or extra_id == src_map.get(item.get('source')):
+                continue
+            extras_rows.append({
+                'item_id': inserted_id,
+                'source_id': extra_id,
+                'url': item.get('url', '#'),
+            })
+
+    if extras_rows:
+        supabase.table('item_extra_sources').insert(extras_rows).execute()
 
 
 def save_weekly_summary(week_start: str, summary: dict):

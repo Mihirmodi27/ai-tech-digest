@@ -12,18 +12,16 @@ INSERT INTO categories (name, slug, sort_order) VALUES
   ('Rumors & Unconfirmed',     'rumors-unconfirmed',     10)
 ON CONFLICT (name) DO NOTHING;
 
--- Seed sources
+-- Seed sources (only sources with a real, working RSS feed)
 INSERT INTO sources (name, favicon, url, rss_url) VALUES
   ('Reuters',          'R', 'https://www.reuters.com',          'https://www.reuters.com/technology/rss'),
   ('The Verge',        'V', 'https://www.theverge.com',         'https://www.theverge.com/rss/index.xml'),
   ('TechCrunch',       'T', 'https://techcrunch.com',           'https://techcrunch.com/feed/'),
-  ('Bloomberg',        'B', 'https://www.bloomberg.com',        NULL),
   ('Ars Technica',     'A', 'https://arstechnica.com',          'https://feeds.arstechnica.com/arstechnica/technology-lab'),
   ('Wired',            'W', 'https://www.wired.com',            'https://www.wired.com/feed/rss'),
-  ('The Information',  'I', 'https://www.theinformation.com',   NULL),
   ('MIT Tech Review',  'M', 'https://www.technologyreview.com', 'https://www.technologyreview.com/feed/'),
   ('VentureBeat',      'V', 'https://venturebeat.com',          'https://venturebeat.com/feed/'),
-  ('ArXiv',            'X', 'https://arxiv.org',                NULL),
+  ('ArXiv',            'X', 'https://arxiv.org',                'http://export.arxiv.org/rss/cs.AI'),
   ('Hacker News',      'H', 'https://news.ycombinator.com',     'https://hnrss.org/newest?points=100&q=AI'),
   ('GitHub Blog',      'G', 'https://github.blog',              'https://github.blog/feed/')
 ON CONFLICT (name) DO NOTHING;

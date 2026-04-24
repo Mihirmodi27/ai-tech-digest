@@ -27,7 +27,8 @@ For each included item, generate:
 - tags: 2-4 lowercase hashtags
 - source: The primary source name
 - extra_sources: Other sources covering the same story (for deduplication)
-- time: Relative time label like "2h ago", "6h ago"
+- published_at: ISO 8601 timestamp — use the PUBLISHED value from the source article(s).
+  When merging duplicates, use the newest PUBLISHED among them.
 
 Categories: {categories}
 
@@ -51,7 +52,7 @@ Return ONLY valid JSON matching this schema:
       "source": "string",
       "extra_sources": ["string"],
       "url": "string",
-      "time": "string"
+      "published_at": "ISO 8601 string or null"
     }}
   ],
   "items_evaluated": number,

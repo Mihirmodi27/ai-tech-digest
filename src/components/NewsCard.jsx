@@ -1,10 +1,12 @@
 import React, { useState, forwardRef } from 'react';
 import { ChevronRight, ExternalLink, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { relativeTime } from '@/lib/time';
 
 const NewsCard = forwardRef(({ item, isActive, showTags }, ref) => {
   const [expanded, setExpanded] = useState(false);
   const isRumor = item.category === 'Rumors & Unconfirmed';
+  const timeLabel = relativeTime(item.publishedAt) || item.time || '';
 
   return (
     <div
@@ -53,7 +55,7 @@ const NewsCard = forwardRef(({ item, isActive, showTags }, ref) => {
             </span>
             <span className="hidden lg:inline">{item.source?.name}</span>
           </span>
-          <span className="tabular-nums">{item.time}</span>
+          <span className="tabular-nums">{timeLabel}</span>
           <a
             href={item.url}
             target="_blank"

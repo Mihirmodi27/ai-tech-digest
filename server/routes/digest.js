@@ -26,7 +26,7 @@ router.get('/latest', async (req, res) => {
     const { data: items, error: iErr } = await supabase
       .from('digest_items')
       .select(`
-        id, headline, what, why, url, time_label, tags, rank, is_rumor,
+        id, headline, what, why, url, time_label, published_at, tags, rank, is_rumor,
         categories ( name ),
         sources ( name, favicon, url )
       `)
@@ -53,6 +53,7 @@ router.get('/latest', async (req, res) => {
       id: item.id,
       category: item.categories.name,
       time: item.time_label,
+      publishedAt: item.published_at,
       source: item.sources,
       extraSources: extrasMap[item.id] || [],
       headline: item.headline,
@@ -171,7 +172,7 @@ router.get('/:date', async (req, res) => {
     const { data: items, error: iErr } = await supabase
       .from('digest_items')
       .select(`
-        id, headline, what, why, url, time_label, tags, rank, is_rumor,
+        id, headline, what, why, url, time_label, published_at, tags, rank, is_rumor,
         categories ( name ),
         sources ( name, favicon, url )
       `)
@@ -196,6 +197,7 @@ router.get('/:date', async (req, res) => {
       id: item.id,
       category: item.categories.name,
       time: item.time_label,
+      publishedAt: item.published_at,
       source: item.sources,
       extraSources: extrasMap[item.id] || [],
       headline: item.headline,
