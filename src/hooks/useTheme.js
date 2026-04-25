@@ -1,22 +1,17 @@
 import { useState, useEffect } from 'react';
 
-const ORDER = ['dark', 'light', 'creative'];
-
 export function useTheme() {
   const [theme, setTheme] = useState(() => {
     const stored = localStorage.getItem('digest-theme');
-    return ORDER.includes(stored) ? stored : 'dark';
+    return stored === 'dark' || stored === 'light' ? stored : 'light';
   });
 
   useEffect(() => {
-    const html = document.documentElement;
-    html.classList.toggle('light', theme === 'light');
-    html.classList.toggle('creative', theme === 'creative');
+    document.documentElement.classList.toggle('dark', theme === 'dark');
     localStorage.setItem('digest-theme', theme);
   }, [theme]);
 
-  const toggle = () =>
-    setTheme((t) => ORDER[(ORDER.indexOf(t) + 1) % ORDER.length]);
+  const toggle = () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
 
   return { theme, toggle };
 }

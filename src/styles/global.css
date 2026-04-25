@@ -3,86 +3,71 @@
 @tailwind utilities;
 
 @layer base {
-  /* Linear default = dark; light is opt-in */
+  /* Default = light glass on #FAFAFA */
   :root {
-    --background: 225 6% 10%;          /* #18191B */
-    --foreground: 220 9% 97%;          /* #F7F8F8 */
-    --card: 225 6% 13%;                /* #1F2023 */
-    --card-foreground: 220 9% 97%;
-    --popover: 225 6% 11%;             /* #1B1C1F */
-    --popover-foreground: 220 9% 97%;
-    --primary: 232 58% 60%;            /* #5E6AD2 — Linear accent */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 225 6% 17%;           /* #28292D */
-    --secondary-foreground: 220 9% 97%;
-    --muted: 225 6% 15%;               /* #23242A */
-    --muted-foreground: 220 9% 60%;    /* #8A8F98 */
-    --accent: 225 6% 17%;              /* subtle hover */
-    --accent-foreground: 220 9% 97%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 225 6% 20%;              /* #2E2F34 */
-    --input: 225 6% 17%;
-    --ring: 232 58% 60%;
-    --radius: 0.375rem;                /* 6px — Linear's tight radius */
-    --rumor: 38 92% 50%;
-
-    --sidebar: 225 6% 8%;              /* #131416 — deeper than main bg */
-    --sidebar-border: 225 6% 14%;
-  }
-
-  .light {
-    --background: 0 0% 100%;
-    --foreground: 225 10% 12%;
-    --card: 0 0% 100%;
-    --card-foreground: 225 10% 12%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 225 10% 12%;
-    --primary: 232 58% 56%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 225 10% 96%;
-    --secondary-foreground: 225 10% 12%;
-    --muted: 225 10% 96%;
-    --muted-foreground: 225 8% 40%;
-    --accent: 225 10% 94%;
-    --accent-foreground: 225 10% 12%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 225 10% 90%;
-    --input: 225 10% 90%;
-    --ring: 232 58% 56%;
-    --rumor: 38 92% 50%;
-
-    --sidebar: 225 10% 98%;
-    --sidebar-border: 225 10% 92%;
-  }
-
-  /* Creative skin — flat light canvas, frosted-glass floating panels */
-  .creative {
     --background: 0 0% 98%;            /* #FAFAFA */
-    --foreground: 225 12% 14%;         /* #1F2128 */
+    --foreground: 225 12% 14%;
     --card: 0 0% 100%;
     --card-foreground: 225 12% 14%;
     --popover: 0 0% 100%;
     --popover-foreground: 225 12% 14%;
-    --primary: 225 12% 14%;            /* monochrome — dark text on light glass */
+    --primary: 225 12% 14%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 100%;
+    --secondary: 0 0% 95%;
     --secondary-foreground: 225 12% 14%;
     --muted: 0 0% 92%;
     --muted-foreground: 225 6% 45%;
-    --accent: 0 0% 100%;
+    --accent: 0 0% 95%;
     --accent-foreground: 225 12% 14%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     --border: 0 0% 88%;
     --input: 0 0% 88%;
     --ring: 225 12% 50%;
-    --radius: 1rem;                    /* 16px — generous round */
+    --radius: 1rem;
     --rumor: 38 92% 50%;
 
     --sidebar: 0 0% 100%;
     --sidebar-border: 0 0% 90%;
+
+    /* Frosted-glass surface tokens */
+    --glass-bg: 0 0% 100% / 0.75;
+    --glass-border: 0 0% 0% / 0.05;
+    --glass-shadow-rgb: 0 0 0;
+    --glass-shadow-alpha: 0.05;
+  }
+
+  /* Dark glass — same aesthetic, dark canvas */
+  .dark {
+    --background: 0 0% 4%;             /* near-black */
+    --foreground: 0 0% 96%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 96%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 96%;
+    --primary: 0 0% 96%;
+    --primary-foreground: 0 0% 6%;
+    --secondary: 0 0% 14%;
+    --secondary-foreground: 0 0% 96%;
+    --muted: 0 0% 14%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 0 0% 14%;
+    --accent-foreground: 0 0% 96%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 0 0% 60%;
+    --rumor: 38 92% 50%;
+
+    --sidebar: 0 0% 7%;
+    --sidebar-border: 0 0% 16%;
+
+    /* On dark, glass is white-tinted at low opacity */
+    --glass-bg: 0 0% 100% / 0.05;
+    --glass-border: 0 0% 100% / 0.08;
+    --glass-shadow-rgb: 0 0 0;
+    --glass-shadow-alpha: 0.4;
   }
 }
 
@@ -98,42 +83,24 @@
   }
   html { font-size: 14px; }
 
-  /* Linear-style tight scrollbars */
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 4px; }
   ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.4); }
 }
 
-/* Sidebar tokens as utilities */
 @layer utilities {
   .bg-sidebar { background-color: hsl(var(--sidebar)); }
   .border-sidebar-border { border-color: hsl(var(--sidebar-border)); }
-}
 
-/* Creative skin — flat #FAFAFA canvas + frosted-glass surface utilities */
-.creative body {
-  background-color: hsl(var(--background));
-}
-
-@layer utilities {
-  /* Frosted glass panel — translucent white + heavy backdrop blur */
+  /* Frosted-glass surface — auto-adapts to light/dark via tokens */
   .glass-panel {
-    background-color: hsl(0 0% 100% / 0.75);
+    background-color: hsl(var(--glass-bg));
     backdrop-filter: blur(24px) saturate(180%);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
-    border: 1px solid hsl(0 0% 0% / 0.05);
+    border: 1px solid hsl(var(--glass-border));
     box-shadow:
-      0 1px 2px hsl(0 0% 0% / 0.04),
-      0 8px 24px hsl(0 0% 0% / 0.05);
-  }
-  /* Dark frosted variant — for menus / popovers / toasts on a light bg */
-  .glass-overlay {
-    background-color: hsl(225 12% 22% / 0.78);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    color: hsl(0 0% 98%);
-    border: 1px solid hsl(0 0% 100% / 0.1);
-    box-shadow: 0 8px 32px hsl(0 0% 0% / 0.18);
+      0 1px 2px rgb(var(--glass-shadow-rgb) / var(--glass-shadow-alpha)),
+      0 8px 24px rgb(var(--glass-shadow-rgb) / var(--glass-shadow-alpha));
   }
 }

@@ -13,11 +13,9 @@ const NewsCard = forwardRef(({ item, isActive, showTags }, ref) => {
       ref={ref}
       id={`card-${item.id}`}
       className={cn(
-        'group relative transition-colors',
-        'creative:mb-2 creative:rounded-2xl creative:border creative:border-white/70 creative:bg-white/70 creative:backdrop-blur-md creative:shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)]',
-        isActive
-          ? 'bg-secondary/50 creative:bg-white/90'
-          : 'hover:bg-secondary/30 creative:hover:bg-white/85'
+        'group relative mb-2 rounded-2xl border border-[hsl(var(--glass-border))] bg-[hsl(var(--glass-bg))] backdrop-blur-md transition-colors',
+        'shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)] dark:shadow-[0_1px_2px_rgba(0,0,0,0.4),0_4px_16px_rgba(0,0,0,0.4)]',
+        isActive ? 'bg-card/90' : 'hover:bg-card/85'
       )}
     >
       {/* Row — Linear-style single line */}
@@ -37,10 +35,10 @@ const NewsCard = forwardRef(({ item, isActive, showTags }, ref) => {
         {/* Category pill — monochrome */}
         <span
           className={cn(
-            'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider creative:rounded-full creative:px-2',
+            'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider',
             isRumor
               ? 'bg-[hsl(var(--rumor)/0.15)] text-[hsl(var(--rumor))]'
-              : 'bg-secondary text-muted-foreground creative:bg-black/5'
+              : 'bg-foreground/5 text-muted-foreground'
           )}
         >
           {isRumor && <AlertCircle className="mr-0.5 inline h-2.5 w-2.5" />}

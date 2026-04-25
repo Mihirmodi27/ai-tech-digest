@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Sun, Moon, Sparkles, Command, Play, Loader2, Check, AlertCircle } from 'lucide-react';
+import { Search, Sun, Moon, Command, Play, Loader2, Check, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -102,16 +102,10 @@ export default function Header({
     runState === 'error' ? (runError || 'Failed') :
     'Run';
 
-  // Icon hints at next theme in the cycle: dark→light→creative→dark.
-  const themeIcon =
-    theme === 'dark' ? <Sun className="h-3.5 w-3.5" /> :
-    theme === 'light' ? <Sparkles className="h-3.5 w-3.5" /> :
-    <Moon className="h-3.5 w-3.5" />;
-
   return (
-    <header className="flex h-14 shrink-0 items-center gap-4 bg-background px-6 creative:h-16 creative:bg-transparent creative:px-4">
+    <header className="flex h-16 shrink-0 items-center gap-4 bg-transparent px-4">
       {/* Breadcrumb / title */}
-      <div className="flex items-center gap-2.5 creative:glass-panel creative:rounded-2xl creative:px-4 creative:py-1.5">
+      <div className="glass-panel flex items-center gap-2.5 rounded-2xl px-4 py-1.5">
         <span className="text-[14px] font-semibold">{VIEW_TITLES[viewMode]}</span>
         {viewMode === 'today' && activeCategory !== 'All' && (
           <>
@@ -120,7 +114,7 @@ export default function Header({
           </>
         )}
         {itemCount !== undefined && (
-          <span className="rounded-md bg-secondary px-2 py-0.5 text-[11px] tabular-nums text-muted-foreground creative:bg-black/5">
+          <span className="rounded-md bg-foreground/5 px-2 py-0.5 text-[11px] tabular-nums text-muted-foreground">
             {itemCount}
           </span>
         )}
@@ -133,7 +127,7 @@ export default function Header({
         onClick={handleRun}
         disabled={runState === 'running'}
         title="Trigger the daily pipeline workflow"
-        className="h-8 gap-1.5 px-2.5 text-[12.5px] font-normal text-muted-foreground hover:text-foreground creative:glass-panel creative:rounded-full creative:px-4 creative:hover:bg-white"
+        className="glass-panel h-8 gap-1.5 rounded-full px-4 text-[12.5px] font-normal text-muted-foreground hover:text-foreground"
       >
         {runIcon}
         {runLabel}
@@ -150,7 +144,7 @@ export default function Header({
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search…"
-          className="h-8 rounded-md border-transparent bg-secondary/60 pl-9 text-[13px] placeholder:text-muted-foreground/70 focus-visible:border-border focus-visible:ring-0 creative:glass-panel creative:h-9 creative:rounded-full creative:bg-transparent"
+          className="glass-panel h-9 rounded-full bg-transparent pl-9 text-[13px] placeholder:text-muted-foreground/70 focus-visible:ring-0"
         />
         <kbd className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 font-mono text-[10px] text-muted-foreground/60">
           /
@@ -158,21 +152,21 @@ export default function Header({
       </div>
 
       {/* Right controls */}
-      <div className="flex items-center gap-0.5 creative:glass-panel creative:rounded-full creative:p-1">
+      <div className="glass-panel flex items-center gap-0.5 rounded-full p-1">
         <Button
           variant="ghost"
           size="icon"
           onClick={toggleTheme}
-          className="h-8 w-8 text-muted-foreground hover:text-foreground creative:rounded-full"
+          className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
           aria-label="Toggle theme"
         >
-          {themeIcon}
+          {theme === 'dark' ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
         </Button>
         <Button
           variant="ghost"
           size="icon"
           onClick={onShowShortcuts}
-          className="h-8 w-8 text-muted-foreground hover:text-foreground creative:rounded-full"
+          className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
           aria-label="Keyboard shortcuts"
         >
           <Command className="h-3.5 w-3.5" />
