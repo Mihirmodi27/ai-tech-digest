@@ -110,9 +110,10 @@
 
 /* Creative skin — dot-grid canvas + frosted-glass surface utilities */
 .creative body {
-  background-color: hsl(var(--background));
-  background-image: radial-gradient(circle, hsl(0 0% 75%) 1px, transparent 1px);
-  background-size: 22px 22px;
+  background-color: hsl(0 0% 97%);
+  background-image: radial-gradient(circle, hsl(0 0% 80%) 0.9px, transparent 0.9px);
+  background-size: 16px 16px;
+  background-position: -1px -1px;
 }
 
 @layer utilities {
