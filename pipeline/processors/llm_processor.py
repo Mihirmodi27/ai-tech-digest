@@ -2,13 +2,21 @@
 Phase 2: LLM Processor
 Takes raw articles, deduplicates, categorizes, and generates
 headline / what / why / tags for each digest item using Claude.
+
+Two strategies, controlled by LLM_STRATEGY env var:
+- 'single' (default): one Claude call with all articles inline.
+- 'mapreduce': chunked candidate extraction + a final dedup/rerank pass.
+  Decouples source count from prompt size; tradeoff is N+1 LLM calls.
 """
 import json
 from datetime import datetime, timezone
 
 import anthropic
 
-from config import ANTHROPIC_API_KEY, CLAUDE_MODEL, CATEGORIES, MAX_DIGEST_ITEMS, TOP_N_STORIES
+from config import (
+    ANTHROPIC_API_KEY, CLAUDE_MODEL, CATEGORIES, MAX_DIGEST_ITEMS, TOP_N_STORIES,
+    LLM_STRATEGY, MAPREDUCE_CHUNK_SIZE,
+)
 from db import (
     get_unprocessed_articles, mark_articles_processed,
     create_digest, insert_digest_items,
@@ -18,7 +26,18 @@ from prompts import load_prompt
 
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
-SYSTEM_PROMPT, PROMPT_VERSION = load_prompt('daily_digest.v1')
+# Single-strategy prompt (legacy, default)
+SINGLE_PROMPT, SINGLE_VERSION = load_prompt('daily_digest.v1')
+
+# Map-reduce prompts
+CANDIDATE_PROMPT, CANDIDATE_VERSION = load_prompt('daily_digest_candidate.v1')
+RERANK_PROMPT, RERANK_VERSION = load_prompt('daily_digest_rerank.v1')
+
+PROMPT_VERSION = (
+    f'{CANDIDATE_VERSION},{RERANK_VERSION}'
+    if LLM_STRATEGY == 'mapreduce'
+    else SINGLE_VERSION
+)
 
 
 def build_articles_prompt(articles: list[dict]) -> str:
@@ -36,17 +55,22 @@ def build_articles_prompt(articles: list[dict]) -> str:
     return "\n---\n".join(parts)
 
 
-def process_articles(articles: list[dict]) -> dict:
-    """Send articles to Claude and get structured digest items back."""
-    if not articles:
-        return {'items': [], 'items_evaluated': 0, 'items_included': 0}
+def _extract_json(text: str) -> dict:
+    """Strip code fences from a Claude response and parse JSON."""
+    if '```json' in text:
+        text = text.split('```json')[1].split('```')[0]
+    elif '```' in text:
+        text = text.split('```')[1].split('```')[0]
+    return json.loads(text.strip())
 
+
+def _process_single(articles: list[dict]) -> dict:
+    """One-shot strategy: send every article in a single Claude call."""
     articles_text = build_articles_prompt(articles)
-
     response = client.messages.create(
         model=CLAUDE_MODEL,
         max_tokens=8000,
-        system=SYSTEM_PROMPT.format(
+        system=SINGLE_PROMPT.format(
             categories=", ".join(CATEGORIES),
             max_items=MAX_DIGEST_ITEMS,
         ),
@@ -55,21 +79,75 @@ def process_articles(articles: list[dict]) -> dict:
             "content": f"Here are today's {len(articles)} raw articles. Curate the digest:\n\n{articles_text}",
         }],
     )
+    return _extract_json(response.content[0].text)
 
-    # Extract JSON from response
-    text = response.content[0].text
-    # Handle potential markdown code fences
-    if '```json' in text:
-        text = text.split('```json')[1].split('```')[0]
-    elif '```' in text:
-        text = text.split('```')[1].split('```')[0]
 
-    return json.loads(text.strip())
+def _extract_candidates(articles: list[dict]) -> list[dict]:
+    """Map step: ask Claude for candidate digest items from one chunk."""
+    articles_text = build_articles_prompt(articles)
+    response = client.messages.create(
+        model=CLAUDE_MODEL,
+        max_tokens=6000,
+        system=CANDIDATE_PROMPT.format(categories=", ".join(CATEGORIES)),
+        messages=[{
+            "role": "user",
+            "content": f"Chunk of {len(articles)} raw articles. Extract candidates:\n\n{articles_text}",
+        }],
+    )
+    parsed = _extract_json(response.content[0].text)
+    return parsed.get('items', [])
+
+
+def _process_mapreduce(articles: list[dict]) -> dict:
+    """Chunked candidate extraction + a single dedup/rerank pass."""
+    chunks = [
+        articles[i:i + MAPREDUCE_CHUNK_SIZE]
+        for i in range(0, len(articles), MAPREDUCE_CHUNK_SIZE)
+    ]
+    print(f"[processor] mapreduce: {len(chunks)} chunks of up to {MAPREDUCE_CHUNK_SIZE}")
+
+    all_candidates: list[dict] = []
+    for idx, chunk in enumerate(chunks, 1):
+        print(f"  chunk {idx}/{len(chunks)}: extracting candidates from {len(chunk)} articles...")
+        items = _extract_candidates(chunk)
+        print(f"    → {len(items)} candidates")
+        all_candidates.extend(items)
+
+    print(f"[processor] mapreduce: reranking {len(all_candidates)} candidates...")
+    response = client.messages.create(
+        model=CLAUDE_MODEL,
+        max_tokens=8000,
+        system=RERANK_PROMPT.format(max_items=MAX_DIGEST_ITEMS),
+        messages=[{
+            "role": "user",
+            "content": (
+                f"Candidate items from {len(chunks)} chunks "
+                f"({len(all_candidates)} total). Dedup and rank:\n\n"
+                + json.dumps(all_candidates, ensure_ascii=False)
+            ),
+        }],
+    )
+    result = _extract_json(response.content[0].text)
+    # Ensure items_evaluated reflects the actual candidate pool, not just what
+    # the model echoes back.
+    result.setdefault('items_evaluated', len(all_candidates))
+    result.setdefault('items_included', len(result.get('items', [])))
+    return result
+
+
+def process_articles(articles: list[dict]) -> dict:
+    """Dispatch to the configured LLM strategy."""
+    if not articles:
+        return {'items': [], 'items_evaluated': 0, 'items_included': 0}
+    if LLM_STRATEGY == 'mapreduce':
+        return _process_mapreduce(articles)
+    return _process_single(articles)
 
 
 def run_processor():
     """Main processor entry point."""
     with track_run('process') as run:
+        print(f"[processor] Strategy: {LLM_STRATEGY}")
         print("[processor] Fetching unprocessed articles...")
         articles = get_unprocessed_articles()
         run['input_count'] = len(articles)
@@ -103,7 +181,11 @@ def run_processor():
         print(f"[processor] Marked {len(articles)} articles as processed")
 
         run['output_count'] = len(result['items'])
-        run['metadata'] = {'digest_id': digest_id, 'digest_date': digest_date}
+        run['metadata'] = {
+            'digest_id': digest_id,
+            'digest_date': digest_date,
+            'strategy': LLM_STRATEGY,
+        }
         return digest_id
 
 

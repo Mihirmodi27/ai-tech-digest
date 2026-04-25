@@ -24,6 +24,12 @@ MAX_ARTICLES_PER_SOURCE = 20
 MAX_DIGEST_ITEMS = 25
 TOP_N_STORIES = 5
 
+# LLM processing strategy: 'single' (one prompt with all articles, default)
+# or 'mapreduce' (chunked candidate extraction + final dedup/rerank pass).
+# Map-reduce decouples source count from prompt size; tradeoff is N+1 LLM calls.
+LLM_STRATEGY = os.getenv('LLM_STRATEGY', 'single')
+MAPREDUCE_CHUNK_SIZE = int(os.getenv('MAPREDUCE_CHUNK_SIZE', '30'))
+
 # Categories (must match DB seed)
 CATEGORIES = [
     'Models & Updates',
