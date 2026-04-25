@@ -108,7 +108,7 @@ export default function App() {
   const isWeeklyView = viewMode === 'thisWeek' || viewMode === 'lastWeek';
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background text-foreground">
+    <div className="flex h-screen overflow-hidden bg-background text-foreground creative:gap-3 creative:p-3">
       {/* Left sidebar */}
       <Sidebar
         viewMode={viewMode}
@@ -119,7 +119,7 @@ export default function App() {
       />
 
       {/* Main column */}
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col creative:gap-3">
         <Header
           viewMode={viewMode}
           searchQuery={searchQuery}
@@ -141,7 +141,7 @@ export default function App() {
           />
         )}
 
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto creative:px-2">
           {isWeeklyView ? (
             <WeeklySummary summary={weeklySummary} isLoading={weeklyLoading} />
           ) : todayLoading ? (

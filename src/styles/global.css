@@ -56,6 +56,34 @@
     --sidebar: 225 10% 98%;
     --sidebar-border: 225 10% 92%;
   }
+
+  /* Creative skin — light, glassmorphic, dot-grid canvas */
+  .creative {
+    --background: 0 0% 96%;            /* #F4F4F4 */
+    --foreground: 225 12% 14%;         /* #1F2128 */
+    --card: 0 0% 100%;
+    --card-foreground: 225 12% 14%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 225 12% 14%;
+    --primary: 225 12% 14%;            /* monochrome — dark text on light glass */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 100%;
+    --secondary-foreground: 225 12% 14%;
+    --muted: 0 0% 92%;
+    --muted-foreground: 225 6% 45%;
+    --accent: 0 0% 100%;
+    --accent-foreground: 225 12% 14%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 88%;
+    --input: 0 0% 88%;
+    --ring: 225 12% 50%;
+    --radius: 1rem;                    /* 16px — generous round */
+    --rumor: 38 92% 50%;
+
+    --sidebar: 0 0% 100%;
+    --sidebar-border: 0 0% 90%;
+  }
 }
 
 @layer base {
@@ -78,4 +106,33 @@
 @layer utilities {
   .bg-sidebar { background-color: hsl(var(--sidebar)); }
   .border-sidebar-border { border-color: hsl(var(--sidebar-border)); }
+}
+
+/* Creative skin — dot-grid canvas + frosted-glass surface utilities */
+.creative body {
+  background-color: hsl(var(--background));
+  background-image: radial-gradient(circle, hsl(0 0% 75%) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+@layer utilities {
+  /* Frosted glass panel — translucent white + heavy backdrop blur */
+  .glass-panel {
+    background-color: hsl(0 0% 100% / 0.65);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid hsl(0 0% 100% / 0.8);
+    box-shadow:
+      0 1px 2px hsl(0 0% 0% / 0.04),
+      0 8px 24px hsl(0 0% 0% / 0.06);
+  }
+  /* Dark frosted variant — for menus / popovers / toasts on a light bg */
+  .glass-overlay {
+    background-color: hsl(225 12% 22% / 0.78);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    color: hsl(0 0% 98%);
+    border: 1px solid hsl(0 0% 100% / 0.1);
+    box-shadow: 0 8px 32px hsl(0 0% 0% / 0.18);
+  }
 }

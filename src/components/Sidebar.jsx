@@ -44,10 +44,10 @@ function NavItem({ icon: Icon, label, count, active, disabled, onClick, shortcut
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        'group flex h-8 w-full items-center gap-2.5 rounded-md px-2.5 text-[13px] transition-colors',
+        'group flex h-8 w-full items-center gap-2.5 rounded-md px-2.5 text-[13px] transition-colors creative:rounded-xl',
         active
-          ? 'bg-secondary text-foreground'
-          : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground',
+          ? 'bg-secondary text-foreground creative:bg-black/5'
+          : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground creative:hover:bg-black/[0.03]',
         disabled && 'opacity-40 cursor-not-allowed hover:bg-transparent'
       )}
     >
@@ -94,10 +94,10 @@ export default function Sidebar({
   const isCategoryDisabled = viewMode !== 'today';
 
   return (
-    <aside className="hidden h-full w-60 shrink-0 flex-col bg-sidebar md:flex">
+    <aside className="hidden h-full w-60 shrink-0 flex-col bg-sidebar md:flex creative:glass-panel creative:rounded-2xl">
       {/* Workspace header */}
       <div className="flex h-14 items-center gap-2.5 px-4">
-        <div className="flex h-6 w-6 items-center justify-center rounded bg-primary text-[11px] font-bold text-primary-foreground">
+        <div className="flex h-6 w-6 items-center justify-center rounded bg-primary text-[11px] font-bold text-primary-foreground creative:bg-foreground">
           A
         </div>
         <div className="flex-1 truncate text-[13px] font-semibold">AI & Tech Digest</div>

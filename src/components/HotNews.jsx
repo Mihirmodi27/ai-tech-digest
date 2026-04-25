@@ -32,7 +32,7 @@ export default function HotNews({ items, collapsed, setCollapsed, onScrollToItem
               <button
                 key={item.id}
                 onClick={() => onScrollToItem(item.id)}
-                className="group flex items-start gap-2.5 rounded-lg bg-secondary/40 p-3 text-left transition-colors hover:bg-secondary/70"
+                className="group flex items-start gap-2.5 rounded-lg bg-secondary/40 p-3 text-left transition-colors hover:bg-secondary/70 creative:rounded-2xl creative:border creative:border-white/70 creative:bg-white/70 creative:backdrop-blur-md creative:hover:bg-white/90 creative:shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)]"
               >
                 <span className="text-[11px] font-semibold tabular-nums text-primary">
                   {String(i + 1).padStart(2, '0')}

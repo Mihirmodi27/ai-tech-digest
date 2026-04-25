@@ -1,4 +1,5 @@
 import animate from 'tailwindcss-animate';
+import plugin from 'tailwindcss/plugin';
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -56,5 +57,13 @@ export default {
       },
     },
   },
-  plugins: [animate],
+  plugins: [
+    animate,
+    // Add a `creative:` variant. `<className "creative:bg-white/60">` only
+    // applies when an ancestor has the `.creative` class (set on <html> by
+    // useTheme when the user picks the Creative skin).
+    plugin(({ addVariant }) => {
+      addVariant('creative', '.creative &');
+    }),
+  ],
 };
