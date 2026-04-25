@@ -144,25 +144,37 @@ def process_articles(articles: list[dict]) -> dict:
     return _process_single(articles)
 
 
-def run_processor():
+def run_processor(dry_run: bool = False):
     """Main processor entry point."""
-    with track_run('process') as run:
-        print(f"[processor] Strategy: {LLM_STRATEGY}")
-        print("[processor] Fetching unprocessed articles...")
+    with track_run('process', dry_run=dry_run) as run:
+        prefix = '[processor][dry-run] ' if dry_run else '[processor] '
+        print(f"{prefix}Strategy: {LLM_STRATEGY} | model: {CLAUDE_MODEL}")
+        print(f"{prefix}Fetching unprocessed articles...")
         articles = get_unprocessed_articles()
         run['input_count'] = len(articles)
 
         if not articles:
             run['status'] = 'skipped'
             run['output_count'] = 0
-            print("[processor] No new articles to process.")
+            print(f"{prefix}No new articles to process.")
             return None
 
-        print(f"[processor] Processing {len(articles)} articles with Claude...")
+        print(f"{prefix}Processing {len(articles)} articles with Claude...")
         result = process_articles(articles)
 
         now = datetime.now(timezone.utc)
         digest_date = now.strftime('%Y-%m-%d')
+
+        if dry_run:
+            print(f"{prefix}LLM result (would-be digest, NOT persisted):")
+            print(json.dumps(result, indent=2, ensure_ascii=False))
+            run['output_count'] = len(result.get('items', []))
+            run['metadata'] = {
+                'digest_date': digest_date,
+                'strategy': LLM_STRATEGY,
+            }
+            return None
+
         meta = {
             'sources_scanned': len(set(a.get('source_id') for a in articles)),
             'items_evaluated': result.get('items_evaluated', len(articles)),

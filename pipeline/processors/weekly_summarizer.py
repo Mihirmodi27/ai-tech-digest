@@ -75,12 +75,13 @@ def generate_summary(items: list[dict], week_start: str, week_end: str) -> dict:
     return json.loads(text.strip())
 
 
-def run_weekly_summarizer(which: str = 'current'):
+def run_weekly_summarizer(which: str = 'current', dry_run: bool = False):
     """
     Generate a weekly summary.
     which: 'current' for this week, 'previous' for last week.
     """
-    with track_run('weekly') as run:
+    with track_run('weekly', dry_run=dry_run) as run:
+        prefix = '[weekly][dry-run] ' if dry_run else '[weekly] '
         now = datetime.now(timezone.utc)
         day_of_week = now.weekday()  # 0=Monday
 
@@ -98,22 +99,28 @@ def run_weekly_summarizer(which: str = 'current'):
         we = week_end.strftime('%Y-%m-%d')
 
         run['metadata'] = {'week_start': ws, 'week_end': we, 'which': which}
-        print(f"[weekly] Generating summary for {ws} to {we}...")
+        print(f"{prefix}Generating summary for {ws} to {we}...")
 
         items = get_week_items(ws, we)
         run['input_count'] = len(items)
         if not items:
             run['status'] = 'skipped'
             run['output_count'] = 0
-            print("[weekly] No items found for this week.")
+            print(f"{prefix}No items found for this week.")
             return
 
-        print(f"[weekly] Found {len(items)} items, sending to Claude...")
+        print(f"{prefix}Found {len(items)} items, sending to Claude...")
         summary = generate_summary(items, ws, we)
+
+        if dry_run:
+            print(f"{prefix}LLM result (would-be summary, NOT persisted):")
+            print(json.dumps(summary, indent=2, ensure_ascii=False))
+            run['output_count'] = 0
+            return
 
         save_weekly_summary(ws, summary, prompt_version=PROMPT_VERSION)
         run['output_count'] = 1
-        print(f"[weekly] Summary saved for week of {ws}")
+        print(f"{prefix}Summary saved for week of {ws}")
 
 
 if __name__ == '__main__':

@@ -86,9 +86,9 @@ def scan_hacker_news() -> list[dict]:
     return articles
 
 
-def run_scanner():
+def run_scanner(dry_run: bool = False):
     """Main scanner entry point. Fetches all sources and stores raw articles."""
-    with track_run('scan') as run:
+    with track_run('scan', dry_run=dry_run) as run:
         sources = get_active_sources()
         run['input_count'] = len(sources)
         if not sources:
@@ -99,8 +99,9 @@ def run_scanner():
 
         total_articles = 0
         sources_scanned = 0
+        prefix = '[scanner][dry-run] ' if dry_run else '[scanner] '
 
-        print(f"[scanner] Scanning {len(sources)} sources...")
+        print(f"{prefix}Scanning {len(sources)} sources...")
 
         for source in sources:
             print(f"  Scanning: {source['name']}...")
@@ -113,17 +114,19 @@ def run_scanner():
                 articles = scan_rss_feed(source)
 
             if articles:
-                insert_raw_articles(articles)
+                if not dry_run:
+                    insert_raw_articles(articles)
                 total_articles += len(articles)
                 sources_scanned += 1
-                print(f"    → {len(articles)} articles")
+                tag = 'would insert' if dry_run else 'inserted'
+                print(f"    → {len(articles)} articles ({tag})")
             else:
                 print(f"    → 0 articles (no RSS or empty)")
 
         run['output_count'] = total_articles
         run['metadata'] = {'sources_scanned': sources_scanned}
 
-        print(f"[scanner] Done. {sources_scanned} sources, {total_articles} articles staged.")
+        print(f"{prefix}Done. {sources_scanned} sources, {total_articles} articles staged.")
         return {'sources_scanned': sources_scanned, 'articles_fetched': total_articles}
 
 

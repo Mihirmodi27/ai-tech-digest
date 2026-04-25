@@ -19,7 +19,7 @@ from db import supabase
 
 
 @contextmanager
-def track_run(phase: str):
+def track_run(phase: str, dry_run: bool = False):
     inserted = supabase.table('pipeline_runs').insert({
         'phase': phase,
         'status': 'running',
@@ -30,11 +30,17 @@ def track_run(phase: str):
     try:
         yield state
     except Exception as exc:
-        supabase.table('pipeline_runs').update({
+        metadata = dict(state.get('metadata', {}))
+        if dry_run:
+            metadata['dry_run'] = True
+        update = {
             'status': 'failed',
             'error_message': str(exc)[:2000],
             'finished_at': datetime.now(timezone.utc).isoformat(),
-        }).eq('id', run_id).execute()
+        }
+        if metadata:
+            update['metadata'] = metadata
+        supabase.table('pipeline_runs').update(update).eq('id', run_id).execute()
         raise
 
     # Success path. Caller may override status to 'skipped'.
@@ -45,6 +51,9 @@ def track_run(phase: str):
     for key in ('input_count', 'output_count'):
         if key in state:
             update[key] = state[key]
-    if 'metadata' in state:
-        update['metadata'] = state['metadata']
+    metadata = dict(state.get('metadata', {}))
+    if dry_run:
+        metadata['dry_run'] = True
+    if metadata:
+        update['metadata'] = metadata
     supabase.table('pipeline_runs').update(update).eq('id', run_id).execute()

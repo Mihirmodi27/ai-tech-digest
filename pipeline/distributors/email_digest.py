@@ -96,15 +96,17 @@ def get_subscribers(frequency: str = 'daily') -> list[str]:
     return [s['email'] for s in result.data]
 
 
-def send_digest_email():
+def send_digest_email(dry_run: bool = False):
     """Main entry point: fetch today's digest and email it to subscribers."""
-    with track_run('distribute') as run:
+    with track_run('distribute', dry_run=dry_run) as run:
+        prefix = '[email][dry-run] ' if dry_run else '[email] '
+
         digest = get_todays_digest()
         if not digest:
             run['status'] = 'skipped'
             run['input_count'] = 0
             run['output_count'] = 0
-            print("[email] No published digest for today. Skipping.")
+            print(f"{prefix}No published digest for today. Skipping.")
             return
 
         subscribers = get_subscribers('daily')
@@ -112,14 +114,22 @@ def send_digest_email():
         if not subscribers:
             run['status'] = 'skipped'
             run['output_count'] = 0
-            print("[email] No active daily subscribers. Skipping.")
+            print(f"{prefix}No active daily subscribers. Skipping.")
             return
 
         date_str = datetime.strptime(digest['digest_date'], '%Y-%m-%d').strftime('%b %d')
         subject = f"AI & Tech Digest — {date_str}"
         html = build_email_html(digest)
 
-        print(f"[email] Sending to {len(subscribers)} subscribers...")
+        if dry_run:
+            print(f"{prefix}Would send '{subject}' to {len(subscribers)} subscribers")
+            print(f"{prefix}HTML preview (first 500 chars):")
+            print(html[:500])
+            run['output_count'] = 0
+            run['metadata'] = {'digest_date': digest['digest_date'], 'recipients': len(subscribers)}
+            return
+
+        print(f"{prefix}Sending to {len(subscribers)} subscribers...")
 
         sent = 0
         failed = 0
@@ -139,7 +149,7 @@ def send_digest_email():
 
         run['output_count'] = sent
         run['metadata'] = {'failed': failed, 'digest_date': digest['digest_date']}
-        print("[email] Done.")
+        print(f"{prefix}Done.")
 
 
 if __name__ == '__main__':
