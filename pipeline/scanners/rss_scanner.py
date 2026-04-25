@@ -15,6 +15,7 @@ from bs4 import BeautifulSoup
 
 from db import get_active_sources, insert_raw_articles
 from config import MAX_ARTICLES_PER_SOURCE
+from runs import track_run
 
 
 def scan_rss_feed(source: dict) -> list[dict]:
@@ -87,37 +88,43 @@ def scan_hacker_news() -> list[dict]:
 
 def run_scanner():
     """Main scanner entry point. Fetches all sources and stores raw articles."""
-    sources = get_active_sources()
-    if not sources:
-        print("[scanner] No active sources configured. Skipping.")
-        return {'sources_scanned': 0, 'articles_fetched': 0}
+    with track_run('scan') as run:
+        sources = get_active_sources()
+        run['input_count'] = len(sources)
+        if not sources:
+            run['status'] = 'skipped'
+            run['output_count'] = 0
+            print("[scanner] No active sources configured. Skipping.")
+            return {'sources_scanned': 0, 'articles_fetched': 0}
 
-    total_articles = 0
-    sources_scanned = 0
+        total_articles = 0
+        sources_scanned = 0
 
-    print(f"[scanner] Scanning {len(sources)} sources...")
+        print(f"[scanner] Scanning {len(sources)} sources...")
 
-    for source in sources:
-        print(f"  Scanning: {source['name']}...")
+        for source in sources:
+            print(f"  Scanning: {source['name']}...")
 
-        if source['name'] == 'Hacker News':
-            articles = scan_hacker_news()
-            # Resolve source_id for HN articles
-            for a in articles:
-                a['source_id'] = source['id']
-        else:
-            articles = scan_rss_feed(source)
+            if source['name'] == 'Hacker News':
+                articles = scan_hacker_news()
+                for a in articles:
+                    a['source_id'] = source['id']
+            else:
+                articles = scan_rss_feed(source)
 
-        if articles:
-            insert_raw_articles(articles)
-            total_articles += len(articles)
-            sources_scanned += 1
-            print(f"    → {len(articles)} articles")
-        else:
-            print(f"    → 0 articles (no RSS or empty)")
+            if articles:
+                insert_raw_articles(articles)
+                total_articles += len(articles)
+                sources_scanned += 1
+                print(f"    → {len(articles)} articles")
+            else:
+                print(f"    → 0 articles (no RSS or empty)")
 
-    print(f"[scanner] Done. {sources_scanned} sources, {total_articles} articles staged.")
-    return {'sources_scanned': sources_scanned, 'articles_fetched': total_articles}
+        run['output_count'] = total_articles
+        run['metadata'] = {'sources_scanned': sources_scanned}
+
+        print(f"[scanner] Done. {sources_scanned} sources, {total_articles} articles staged.")
+        return {'sources_scanned': sources_scanned, 'articles_fetched': total_articles}
 
 
 if __name__ == '__main__':

@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 
 from config import RESEND_API_KEY, EMAIL_FROM
 from db import supabase
+from runs import track_run
 
 resend.api_key = RESEND_API_KEY
 
@@ -97,35 +98,48 @@ def get_subscribers(frequency: str = 'daily') -> list[str]:
 
 def send_digest_email():
     """Main entry point: fetch today's digest and email it to subscribers."""
-    digest = get_todays_digest()
-    if not digest:
-        print("[email] No published digest for today. Skipping.")
-        return
+    with track_run('distribute') as run:
+        digest = get_todays_digest()
+        if not digest:
+            run['status'] = 'skipped'
+            run['input_count'] = 0
+            run['output_count'] = 0
+            print("[email] No published digest for today. Skipping.")
+            return
 
-    subscribers = get_subscribers('daily')
-    if not subscribers:
-        print("[email] No active daily subscribers. Skipping.")
-        return
+        subscribers = get_subscribers('daily')
+        run['input_count'] = len(subscribers)
+        if not subscribers:
+            run['status'] = 'skipped'
+            run['output_count'] = 0
+            print("[email] No active daily subscribers. Skipping.")
+            return
 
-    date_str = datetime.strptime(digest['digest_date'], '%Y-%m-%d').strftime('%b %d')
-    subject = f"AI & Tech Digest — {date_str}"
-    html = build_email_html(digest)
+        date_str = datetime.strptime(digest['digest_date'], '%Y-%m-%d').strftime('%b %d')
+        subject = f"AI & Tech Digest — {date_str}"
+        html = build_email_html(digest)
 
-    print(f"[email] Sending to {len(subscribers)} subscribers...")
+        print(f"[email] Sending to {len(subscribers)} subscribers...")
 
-    for email in subscribers:
-        try:
-            resend.Emails.send({
-                "from": EMAIL_FROM,
-                "to": email,
-                "subject": subject,
-                "html": html,
-            })
-            print(f"  ✓ {email}")
-        except Exception as e:
-            print(f"  ✗ {email}: {e}")
+        sent = 0
+        failed = 0
+        for email in subscribers:
+            try:
+                resend.Emails.send({
+                    "from": EMAIL_FROM,
+                    "to": email,
+                    "subject": subject,
+                    "html": html,
+                })
+                print(f"  ✓ {email}")
+                sent += 1
+            except Exception as e:
+                print(f"  ✗ {email}: {e}")
+                failed += 1
 
-    print("[email] Done.")
+        run['output_count'] = sent
+        run['metadata'] = {'failed': failed, 'digest_date': digest['digest_date']}
+        print("[email] Done.")
 
 
 if __name__ == '__main__':

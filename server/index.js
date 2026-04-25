@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import digestRoutes from './routes/digest.js';
 import categoryRoutes from './routes/categories.js';
+import adminRoutes from './routes/admin.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -16,6 +17,7 @@ app.use(express.json());
 // API routes
 app.use('/api/digest', digestRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

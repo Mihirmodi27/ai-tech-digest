@@ -13,6 +13,7 @@ from db import (
     get_unprocessed_articles, mark_articles_processed,
     create_digest, insert_digest_items,
 )
+from runs import track_run
 
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
@@ -108,39 +109,42 @@ def process_articles(articles: list[dict]) -> dict:
 
 def run_processor():
     """Main processor entry point."""
-    print("[processor] Fetching unprocessed articles...")
-    articles = get_unprocessed_articles()
+    with track_run('process') as run:
+        print("[processor] Fetching unprocessed articles...")
+        articles = get_unprocessed_articles()
+        run['input_count'] = len(articles)
 
-    if not articles:
-        print("[processor] No new articles to process.")
-        return None
+        if not articles:
+            run['status'] = 'skipped'
+            run['output_count'] = 0
+            print("[processor] No new articles to process.")
+            return None
 
-    print(f"[processor] Processing {len(articles)} articles with Claude...")
-    result = process_articles(articles)
+        print(f"[processor] Processing {len(articles)} articles with Claude...")
+        result = process_articles(articles)
 
-    # Create digest record
-    now = datetime.now(timezone.utc)
-    digest_date = now.strftime('%Y-%m-%d')
-    meta = {
-        'sources_scanned': len(set(a.get('source_id') for a in articles)),
-        'items_evaluated': result.get('items_evaluated', len(articles)),
-        'items_included': result.get('items_included', len(result['items'])),
-        'generated_at': now.strftime('%H:%M') + ' UTC',
-        'updated_at': now.strftime('%H:%M') + ' UTC',
-    }
+        now = datetime.now(timezone.utc)
+        digest_date = now.strftime('%Y-%m-%d')
+        meta = {
+            'sources_scanned': len(set(a.get('source_id') for a in articles)),
+            'items_evaluated': result.get('items_evaluated', len(articles)),
+            'items_included': result.get('items_included', len(result['items'])),
+            'generated_at': now.strftime('%H:%M') + ' UTC',
+            'updated_at': now.strftime('%H:%M') + ' UTC',
+        }
 
-    digest_id = create_digest(digest_date, meta)
-    print(f"[processor] Created digest #{digest_id} for {digest_date}")
+        digest_id = create_digest(digest_date, meta)
+        print(f"[processor] Created digest #{digest_id} for {digest_date}")
 
-    # Insert items
-    insert_digest_items(digest_id, result['items'])
-    print(f"[processor] Inserted {len(result['items'])} items")
+        insert_digest_items(digest_id, result['items'])
+        print(f"[processor] Inserted {len(result['items'])} items")
 
-    # Mark raw articles as processed
-    mark_articles_processed([a['id'] for a in articles])
-    print(f"[processor] Marked {len(articles)} articles as processed")
+        mark_articles_processed([a['id'] for a in articles])
+        print(f"[processor] Marked {len(articles)} articles as processed")
 
-    return digest_id
+        run['output_count'] = len(result['items'])
+        run['metadata'] = {'digest_id': digest_id, 'digest_date': digest_date}
+        return digest_id
 
 
 if __name__ == '__main__':

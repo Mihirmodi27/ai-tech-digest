@@ -10,6 +10,7 @@ import anthropic
 
 from config import ANTHROPIC_API_KEY, CLAUDE_MODEL, CATEGORIES
 from db import supabase, save_weekly_summary
+from runs import track_run
 
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
@@ -96,34 +97,40 @@ def run_weekly_summarizer(which: str = 'current'):
     Generate a weekly summary.
     which: 'current' for this week, 'previous' for last week.
     """
-    now = datetime.now(timezone.utc)
-    day_of_week = now.weekday()  # 0=Monday
+    with track_run('weekly') as run:
+        now = datetime.now(timezone.utc)
+        day_of_week = now.weekday()  # 0=Monday
 
-    this_monday = now - timedelta(days=day_of_week)
-    this_monday = this_monday.replace(hour=0, minute=0, second=0, microsecond=0)
+        this_monday = now - timedelta(days=day_of_week)
+        this_monday = this_monday.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    if which == 'current':
-        week_start = this_monday
-    else:
-        week_start = this_monday - timedelta(days=7)
+        if which == 'current':
+            week_start = this_monday
+        else:
+            week_start = this_monday - timedelta(days=7)
 
-    week_end = week_start + timedelta(days=6)
+        week_end = week_start + timedelta(days=6)
 
-    ws = week_start.strftime('%Y-%m-%d')
-    we = week_end.strftime('%Y-%m-%d')
+        ws = week_start.strftime('%Y-%m-%d')
+        we = week_end.strftime('%Y-%m-%d')
 
-    print(f"[weekly] Generating summary for {ws} to {we}...")
+        run['metadata'] = {'week_start': ws, 'week_end': we, 'which': which}
+        print(f"[weekly] Generating summary for {ws} to {we}...")
 
-    items = get_week_items(ws, we)
-    if not items:
-        print("[weekly] No items found for this week.")
-        return
+        items = get_week_items(ws, we)
+        run['input_count'] = len(items)
+        if not items:
+            run['status'] = 'skipped'
+            run['output_count'] = 0
+            print("[weekly] No items found for this week.")
+            return
 
-    print(f"[weekly] Found {len(items)} items, sending to Claude...")
-    summary = generate_summary(items, ws, we)
+        print(f"[weekly] Found {len(items)} items, sending to Claude...")
+        summary = generate_summary(items, ws, we)
 
-    save_weekly_summary(ws, summary)
-    print(f"[weekly] Summary saved for week of {ws}")
+        save_weekly_summary(ws, summary)
+        run['output_count'] = 1
+        print(f"[weekly] Summary saved for week of {ws}")
 
 
 if __name__ == '__main__':
