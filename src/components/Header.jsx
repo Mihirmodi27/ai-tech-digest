@@ -50,7 +50,7 @@ export default function Header({
   async function handleRun() {
     let token = getToken();
     if (!token) {
-      token = window.prompt('Admin token (set ADMIN_TOKEN in your env):') || '';
+      token = (window.prompt('Admin token (set ADMIN_TOKEN in your env):') || '').trim();
       if (!token) return;
       setToken(token);
     }
@@ -63,7 +63,7 @@ export default function Header({
       if (res.status === 401) {
         // Stale or wrong token — clear and re-prompt once.
         setToken('');
-        const fresh = window.prompt('Token rejected. Re-enter ADMIN_TOKEN:') || '';
+        const fresh = (window.prompt('Token rejected. Re-enter ADMIN_TOKEN:') || '').trim();
         if (!fresh) {
           setRunState('error');
           setRunError('cancelled');
