@@ -14,51 +14,11 @@ from db import (
     create_digest, insert_digest_items,
 )
 from runs import track_run
+from prompts import load_prompt
 
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
-SYSTEM_PROMPT = """You are an AI & Tech news editor. You receive a batch of raw articles
-and must produce a curated daily digest.
-
-For each included item, generate:
-- headline: A clear, concise headline (rewrite for clarity, not clickbait)
-- what: 2-3 sentences explaining what happened (factual, no opinion)
-- why: 2-3 sentences on why this matters (analytical, forward-looking)
-- category: Exactly one of the categories listed below
-- tags: 2-4 lowercase hashtags
-- source: The primary source name
-- extra_sources: Other sources covering the same story (for deduplication)
-- published_at: ISO 8601 timestamp — use the PUBLISHED value from the source article(s).
-  When merging duplicates, use the newest PUBLISHED among them.
-
-Categories: {categories}
-
-Rules:
-1. Deduplicate: If multiple articles cover the same story, merge them into ONE item.
-   List the primary source and extras.
-2. Rank by importance: Most impactful stories first.
-3. Include {max_items} items maximum.
-4. Mark anything unverified/rumored as category "Rumors & Unconfirmed".
-5. The "why" should explain significance to an AI/tech professional, not just restate facts.
-
-Return ONLY valid JSON matching this schema:
-{{
-  "items": [
-    {{
-      "headline": "string",
-      "what": "string",
-      "why": "string",
-      "category": "string",
-      "tags": ["string"],
-      "source": "string",
-      "extra_sources": ["string"],
-      "url": "string",
-      "published_at": "ISO 8601 string or null"
-    }}
-  ],
-  "items_evaluated": number,
-  "items_included": number
-}}"""
+SYSTEM_PROMPT, PROMPT_VERSION = load_prompt('daily_digest.v1')
 
 
 def build_articles_prompt(articles: list[dict]) -> str:
@@ -133,7 +93,7 @@ def run_processor():
             'updated_at': now.strftime('%H:%M') + ' UTC',
         }
 
-        digest_id = create_digest(digest_date, meta)
+        digest_id = create_digest(digest_date, meta, prompt_version=PROMPT_VERSION)
         print(f"[processor] Created digest #{digest_id} for {digest_date}")
 
         insert_digest_items(digest_id, result['items'])

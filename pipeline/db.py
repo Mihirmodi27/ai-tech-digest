@@ -50,9 +50,9 @@ def mark_articles_processed(article_ids: list[int]):
     supabase.table('raw_articles').update({'processed': True}).in_('id', article_ids).execute()
 
 
-def create_digest(digest_date: str, meta: dict) -> int:
+def create_digest(digest_date: str, meta: dict, prompt_version: str | None = None) -> int:
     """Create a digest record and return its ID."""
-    result = supabase.table('digests').upsert({
+    payload = {
         'digest_date': digest_date,
         'sources_scanned': meta['sources_scanned'],
         'items_evaluated': meta['items_evaluated'],
@@ -60,7 +60,12 @@ def create_digest(digest_date: str, meta: dict) -> int:
         'generated_at': meta['generated_at'],
         'updated_at': meta['updated_at'],
         'status': 'published',
-    }, on_conflict='digest_date').execute()
+    }
+    if prompt_version is not None:
+        payload['prompt_version'] = prompt_version
+    result = supabase.table('digests').upsert(
+        payload, on_conflict='digest_date'
+    ).execute()
     return result.data[0]['id']
 
 
@@ -133,9 +138,9 @@ def insert_digest_items(digest_id: int, items: list[dict]):
         supabase.table('item_extra_sources').insert(extras_rows).execute()
 
 
-def save_weekly_summary(week_start: str, summary: dict):
+def save_weekly_summary(week_start: str, summary: dict, prompt_version: str | None = None):
     """Upsert a weekly summary."""
-    supabase.table('weekly_summaries').upsert({
+    payload = {
         'week_start': week_start,
         'period_label': summary['period'],
         'overview': summary['overview'],
@@ -143,4 +148,9 @@ def save_weekly_summary(week_start: str, summary: dict):
         'top_stories': summary['top_stories'],
         'emerging_themes': summary['emerging_themes'],
         'category_breakdown': summary['category_breakdown'],
-    }, on_conflict='week_start').execute()
+    }
+    if prompt_version is not None:
+        payload['prompt_version'] = prompt_version
+    supabase.table('weekly_summaries').upsert(
+        payload, on_conflict='week_start'
+    ).execute()
