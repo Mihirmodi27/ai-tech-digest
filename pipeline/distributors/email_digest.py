@@ -17,12 +17,12 @@ def get_todays_digest() -> dict | None:
 
     result = supabase.table('digests').select('*').eq(
         'digest_date', today
-    ).eq('status', 'published').single().execute()
+    ).eq('status', 'published').limit(1).execute()
 
     if not result.data:
         return None
 
-    digest = result.data
+    digest = result.data[0]
     items_result = supabase.table('digest_items').select(
         '*, categories(name), sources(name)'
     ).eq('digest_id', digest['id']).order('rank').execute()

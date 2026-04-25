@@ -1,12 +1,13 @@
-# Superseded by scan.yml / process.yml / distribute.yml / weekly.yml.
-# Kept for manual end-to-end runs (workflow_dispatch only).
-name: Daily Digest Pipeline (legacy)
+name: Distribute Email
 
 on:
+  schedule:
+    # 03:00 UTC daily — runs after process, emails subscribers
+    - cron: '0 3 * * *'
   workflow_dispatch:
 
 jobs:
-  run-pipeline:
+  distribute:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -25,12 +26,10 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run daily pipeline
+      - name: Send digest email
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          CLAUDE_MODEL: ${{ secrets.CLAUDE_MODEL }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
-        run: python run_daily.py
+        run: python run_daily.py email

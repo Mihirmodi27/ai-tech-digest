@@ -88,6 +88,10 @@ def scan_hacker_news() -> list[dict]:
 def run_scanner():
     """Main scanner entry point. Fetches all sources and stores raw articles."""
     sources = get_active_sources()
+    if not sources:
+        print("[scanner] No active sources configured. Skipping.")
+        return {'sources_scanned': 0, 'articles_fetched': 0}
+
     total_articles = 0
     sources_scanned = 0
 

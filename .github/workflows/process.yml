@@ -1,12 +1,13 @@
-# Superseded by scan.yml / process.yml / distribute.yml / weekly.yml.
-# Kept for manual end-to-end runs (workflow_dispatch only).
-name: Daily Digest Pipeline (legacy)
+name: Process Articles
 
 on:
+  schedule:
+    # 02:30 UTC daily — runs after scan, sends articles to Claude
+    - cron: '30 2 * * *'
   workflow_dispatch:
 
 jobs:
-  run-pipeline:
+  process:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -25,12 +26,10 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run daily pipeline
+      - name: Process articles with Claude
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           CLAUDE_MODEL: ${{ secrets.CLAUDE_MODEL }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
-        run: python run_daily.py
+        run: python run_daily.py process
