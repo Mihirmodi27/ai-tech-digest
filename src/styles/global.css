@@ -57,9 +57,9 @@
     --sidebar-border: 225 10% 92%;
   }
 
-  /* Creative skin — light, glassmorphic, dot-grid canvas */
+  /* Creative skin — flat light canvas, frosted-glass floating panels */
   .creative {
-    --background: 0 0% 96%;            /* #F4F4F4 */
+    --background: 0 0% 98%;            /* #FAFAFA */
     --foreground: 225 12% 14%;         /* #1F2128 */
     --card: 0 0% 100%;
     --card-foreground: 225 12% 14%;
@@ -108,24 +108,21 @@
   .border-sidebar-border { border-color: hsl(var(--sidebar-border)); }
 }
 
-/* Creative skin — dot-grid canvas + frosted-glass surface utilities */
+/* Creative skin — flat #FAFAFA canvas + frosted-glass surface utilities */
 .creative body {
-  background-color: hsl(0 0% 97%);
-  background-image: radial-gradient(circle, hsl(0 0% 80%) 0.9px, transparent 0.9px);
-  background-size: 16px 16px;
-  background-position: -1px -1px;
+  background-color: hsl(var(--background));
 }
 
 @layer utilities {
   /* Frosted glass panel — translucent white + heavy backdrop blur */
   .glass-panel {
-    background-color: hsl(0 0% 100% / 0.65);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid hsl(0 0% 100% / 0.8);
+    background-color: hsl(0 0% 100% / 0.75);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid hsl(0 0% 0% / 0.05);
     box-shadow:
       0 1px 2px hsl(0 0% 0% / 0.04),
-      0 8px 24px hsl(0 0% 0% / 0.06);
+      0 8px 24px hsl(0 0% 0% / 0.05);
   }
   /* Dark frosted variant — for menus / popovers / toasts on a light bg */
   .glass-overlay {
